@@ -1,0 +1,104 @@
+--- cheese-2.27.90/src/cheese-window.c	2009-08-10 16:03:17.000000000 -0400
++++ hacked/src/cheese-window.c	2009-08-22 03:32:26.482193815 -0400
+@@ -172,6 +172,7 @@
+   GtkActionGroup *actions_burst;
+   GtkActionGroup *actions_fullscreen;
+   GtkActionGroup *actions_wide_mode;
++  GtkActionGroup *actions_trash;
+ 
+   GtkUIManager *ui_manager;
+ 
+@@ -559,6 +560,7 @@
+ {
+   g_object_unref (cheese_window->webcam);
+   g_object_unref (cheese_window->actions_main);
++  g_object_unref (cheese_window->actions_trash);
+   g_object_unref (cheese_window->actions_account_photo);
+   g_object_unref (cheese_window->actions_countdown);
+   g_object_unref (cheese_window->actions_effects);
+@@ -1182,6 +1184,39 @@
+   }
+ }
+ 
++static void
++cheese_window_thumbnails_changed (GtkTreeModel *model,
++                                  CheeseWindow *cheese_window)
++{
++  GtkTreeIter iter;
++
++  if (gtk_tree_model_get_iter_first (model, &iter))
++  {
++    gtk_action_group_set_sensitive (cheese_window->actions_trash, TRUE);
++  }
++  else
++  {
++    gtk_action_group_set_sensitive (cheese_window->actions_trash, FALSE);
++  }
++}
++
++static void
++cheese_window_thumbnail_inserted (GtkTreeModel *model,
++                                  GtkTreePath  *path,
++                                  GtkTreeIter  *iter,
++                                  CheeseWindow *cheese_window)
++{
++  cheese_window_thumbnails_changed (model, cheese_window);
++}
++
++static void
++cheese_window_thumbnail_deleted (GtkTreeModel *model,
++                                 GtkTreePath  *path,
++                                 CheeseWindow *cheese_window)
++{
++  cheese_window_thumbnails_changed (model, cheese_window);
++}
++
+ static gboolean
+ cheese_window_button_press_event_cb (GtkWidget *iconview, GdkEventButton *event,
+                                      CheeseWindow *cheese_window)
+@@ -1549,8 +1584,6 @@
+   {"Cheese",       NULL,            N_("_Cheese")                       },
+ 
+   {"Edit",         NULL,            N_("_Edit")                         },
+-  {"RemoveAll",    NULL,            N_("Move All to Trash"), NULL, NULL,
+-   G_CALLBACK (cheese_window_move_all_media_to_trash)},
+ 
+   {"Help",         NULL,            N_("_Help")                         },
+ 
+@@ -1560,6 +1593,11 @@
+   {"About",        GTK_STOCK_ABOUT, NULL, NULL, NULL, G_CALLBACK (cheese_window_cmd_about)},
+ };
+ 
++static const GtkActionEntry action_entries_trash[] = {
++  {"RemoveAll",    NULL,            N_("Move All to Trash"), NULL, NULL,
++   G_CALLBACK (cheese_window_move_all_media_to_trash)},
++};
++
+ static const GtkToggleActionEntry action_entries_countdown[] = {
+   {"Countdown", NULL, N_("Countdown"), NULL, NULL, G_CALLBACK (cheese_window_set_countdown), FALSE},
+ };
+@@ -1878,6 +1943,10 @@
+                                                                 "ActionsMain",
+                                                                 action_entries_main,
+                                                                 G_N_ELEMENTS (action_entries_main));
++  cheese_window->actions_trash = cheese_window_action_group_new (cheese_window,
++                                                                 "ActionsTrash",
++                                                                 action_entries_trash,
++                                                                 G_N_ELEMENTS (action_entries_trash));
+   cheese_window->actions_toggle = cheese_window_radio_action_group_new (cheese_window,
+                                                                         "ActionsRadio",
+                                                                         action_entries_toggle,
+@@ -2041,6 +2110,13 @@
+                     G_CALLBACK (cheese_window_selection_changed_cb), cheese_window);
+   g_signal_connect (cheese_window->thumb_view, "button_press_event",
+                     G_CALLBACK (cheese_window_button_press_event_cb), cheese_window);
++
++  g_signal_connect (gtk_icon_view_get_model (GTK_ICON_VIEW (cheese_window->thumb_view)), "row-inserted",
++                    G_CALLBACK (cheese_window_thumbnail_inserted), cheese_window);
++  g_signal_connect (gtk_icon_view_get_model (GTK_ICON_VIEW (cheese_window->thumb_view)), "row-deleted",
++                    G_CALLBACK (cheese_window_thumbnail_deleted), cheese_window);
++
++  cheese_window_thumbnails_changed (gtk_icon_view_get_model (GTK_ICON_VIEW (cheese_window->thumb_view)), cheese_window);
+ }
+ 
+ void

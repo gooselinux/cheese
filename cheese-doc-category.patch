@@ -1,0 +1,12 @@
+diff -up cheese-2.28.1/help/cheese.omf.in.doc-category cheese-2.28.1/help/cheese.omf.in
+--- cheese-2.28.1/help/cheese.omf.in.doc-category	2010-05-03 17:03:22.304183500 -0400
++++ cheese-2.28.1/help/cheese.omf.in	2010-05-03 17:03:33.551182661 -0400
+@@ -1,7 +1,7 @@
+ <?xml version="1.0" standalone="no"?>
+ <omf>
+   <resource>
+-    <subject category="GNOME|Applications|Graphics"/>
++    <subject category="GNOME|Multimedia"/>
+     <type>
+       user's guide
+     </type>

@@ -1,0 +1,25 @@
+diff -up cheese-2.28.1/src/cheese-fileutil.c.dir-prefix cheese-2.28.1/src/cheese-fileutil.c
+--- cheese-2.28.1/src/cheese-fileutil.c.dir-prefix	2010-03-21 22:15:53.785530504 -0400
++++ cheese-2.28.1/src/cheese-fileutil.c	2010-03-21 22:18:45.804530437 -0400
+@@ -167,6 +167,8 @@ cheese_fileutil_init (CheeseFileUtil *fi
+ 
+   CheeseGConf *gconf;
+ 
++  const char *override;
++
+   gconf = cheese_gconf_new ();
+ 
+   g_object_get (gconf, "gconf_prop_video_path", &priv->video_path, NULL);
+@@ -197,7 +199,11 @@ cheese_fileutil_init (CheeseFileUtil *fi
+   }
+ 
+   /* FIXME: use the xdg log path */
+-  priv->log_path = g_strjoin (G_DIR_SEPARATOR_S, g_get_home_dir (), ".gnome2", "cheese", NULL);
++  override = g_getenv ("GNOME22_USER_DIR");
++  if (override)
++    priv->log_path = g_build_filename (override, "cheese", NULL);
++  else
++    priv->log_path = g_build_filename (g_get_home_dir (), ".gnome2", "cheese", NULL);
+ 
+   g_object_unref (gconf);
+ }
